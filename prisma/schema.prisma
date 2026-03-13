@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int         @id @default(autoincrement())
+  username     String      @unique
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  designs      Design[]
+  simResults   SimResult[]
+}
+
+model Design {
+  id                 Int         @id @default(autoincrement())
+  userId             Int
+  noseAngle          Float
+  fuselageRatio      Float
+  wingSweep          Float
+  tailTaper          Float
+  volumeDistribution Float
+  savedAt            DateTime    @default(now())
+  user               User        @relation(fields: [userId], references: [id])
+  simResults         SimResult[]
+}
+
+model SimResult {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  designId     Int
+  pldb         Float
+  overpressure Float
+  runAt        DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  design       Design   @relation(fields: [designId], references: [id])
+}
