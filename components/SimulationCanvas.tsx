@@ -24,8 +24,8 @@ export default function SimulationCanvas({ pldb, overpressure, onComplete }: Sim
   const startRef = useRef<number>(0);
   const [done, setDone] = useState(false);
 
-  // intensity 0=best(green), 1=worst(red)
-  const intensity = Math.max(0, Math.min(1, (pldb - 100) / 35));
+  // intensity 0=best(green), 1=worst(red) — calibrated to model range ~75–124 PLdB
+  const intensity = Math.max(0, Math.min(1, (pldb - 75) / 49));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -233,9 +233,9 @@ export default function SimulationCanvas({ pldb, overpressure, onComplete }: Sim
   }, [pldb, overpressure, onComplete, intensity]);
 
   const pldbColor =
-    pldb < 110
+    pldb < 80
       ? "text-green-400"
-      : pldb < 120
+      : pldb < 97
       ? "text-yellow-400"
       : "text-red-400";
 
@@ -257,19 +257,27 @@ export default function SimulationCanvas({ pldb, overpressure, onComplete }: Sim
               {pldb.toFixed(1)}
             </div>
             <div className="text-slate-300 text-lg mb-3">PLdB</div>
-            <div className="text-slate-400 text-sm mb-4">
-              Overpressure: <span className="text-slate-200 font-mono">{overpressure.toFixed(1)} Pa</span>
+            <div className="text-slate-400 text-sm mb-1">
+              Overpressure:{" "}
+              <span className="text-slate-200 font-mono">{overpressure.toFixed(1)} Pa</span>
+            </div>
+            <div className="text-slate-500 text-xs mb-4">
+              {overpressure < 10  ? "Negligible ground effect"
+              : overpressure < 50  ? "Windows may rattle"
+              : overpressure < 150 ? "Glass breakage likely"
+              : overpressure < 500 ? "Structural damage risk"
+              :                      "Severe structural risk"}
             </div>
             <div className={`text-sm font-medium ${pldbColor}`}>
-              {pldb < 108
-                ? "Excellent design! Very quiet boom."
-                : pldb < 113
-                ? "Good design! Quieter than average."
-                : pldb < 118
+              {pldb < 77
+                ? "Excellent! Low-boom design."
+                : pldb < 83
+                ? "Good design — quieter than average."
+                : pldb < 93
                 ? "Average sonic boom level."
-                : pldb < 125
-                ? "Pretty loud! Try a sharper nose."
-                : "Very loud boom! Improve your design."}
+                : pldb < 107
+                ? "Loud — try tuning nose ~0.2, sweep ~52°."
+                : "Very loud — significant design improvements needed."}
             </div>
           </div>
         </div>

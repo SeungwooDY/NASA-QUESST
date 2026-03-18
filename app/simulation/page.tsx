@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SimulationCanvas from "@/components/SimulationCanvas";
@@ -30,12 +30,15 @@ export default function SimulationPage({ searchParams }: SimulationPageProps) {
 
   const [serverResult, setServerResult] = useState<SimOutput | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isNewBest, setIsNewBest] = useState(false);
+  const submitted = useRef(false);
 
   // Submit to server once the page loads (not waiting for animation)
   useEffect(() => {
+    if (submitted.current) return;
+    submitted.current = true;
     setSubmitting(true);
     fetch("/api/simulate", {
       method: "POST",
@@ -49,7 +52,7 @@ export default function SimulationPage({ searchParams }: SimulationPageProps) {
         } else {
           setServerResult(data.result);
           setIsNewBest(data.isNewBest ?? false);
-          setSubmitted(true);
+          setSubmitDone(true);
         }
       })
       .catch(() => setSubmitError("Failed to save score"))
@@ -103,7 +106,7 @@ export default function SimulationPage({ searchParams }: SimulationPageProps) {
         />
       )}
 
-      {submitted && (
+      {submitDone && (
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           {isNewBest && (
             <div className="bg-sky-900/40 border border-sky-700 text-sky-300 rounded-lg px-4 py-2 text-sm font-medium">

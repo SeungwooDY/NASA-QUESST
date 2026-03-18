@@ -20,7 +20,7 @@ function DesignerContent() {
     volumeDistribution: parseFloat(sp.get("volume") ?? "0"),
   });
 
-  const { pldb } = calculateSonicBoom(params);
+  const { pldb, overpressure } = calculateSonicBoom(params);
 
   function handleRunSimulation() {
     const query = new URLSearchParams({
@@ -59,7 +59,7 @@ function DesignerContent() {
           <div className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-4">
             Design Parameters
           </div>
-          <DesignerSliders params={params} onChange={setParams} pldb={pldb} />
+          <DesignerSliders params={params} onChange={setParams} pldb={pldb} overpressure={overpressure} />
         </div>
       </div>
 
