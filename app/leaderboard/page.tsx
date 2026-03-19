@@ -3,25 +3,36 @@ import { createServerSupabaseClient } from "@/lib/supabase-server";
 import type { LeaderboardEntry } from "@/lib/types";
 import Link from "next/link";
 
-async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/leaderboard`,
-      { cache: "no-store" }
-    );
-    const data = await res.json();
-    return data.entries ?? [];
-  } catch {
-    return [];
-  }
-}
-
 export default async function LeaderboardPage() {
   const supabase = await createServerSupabaseClient();
-  const [entries, { data: { user } }] = await Promise.all([
-    getLeaderboard(),
-    supabase.auth.getUser(),  // used only for the "Improve My Design" button visibility
+
+  const [
+    { data: { user } },
+    { data: rows },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("leaderboard")
+      .select("*")
+      .order("pldb", { ascending: true })
+      .limit(50),
   ]);
+
+  const entries: LeaderboardEntry[] = (rows ?? []).map((row, idx) => ({
+    rank: idx + 1,
+    isMe: user?.id === row.user_id,
+    username: row.username,
+    pldb: row.pldb,
+    overpressure: row.overpressure,
+    design: {
+      noseAngle: row.nose_angle,
+      fuselageRatio: row.fuselage_ratio,
+      wingSweep: row.wing_sweep,
+      tailTaper: row.tail_taper,
+      volumeDistribution: row.volume_distribution,
+    },
+    runAt: row.run_at,
+  }));
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
@@ -62,12 +73,21 @@ export default async function LeaderboardPage() {
 
       {entries.length === 0 && (
         <div className="mt-8 text-center">
-          <Link
-            href="/register"
-            className="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
-          >
-            Register & Be First!
-          </Link>
+          {user ? (
+            <Link
+              href="/designer"
+              className="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              Run a Simulation & Be First!
+            </Link>
+          ) : (
+            <Link
+              href="/register"
+              className="bg-sky-600 hover:bg-sky-500 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              Register & Be First!
+            </Link>
+          )}
         </div>
       )}
     </main>
