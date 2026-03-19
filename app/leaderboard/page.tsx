@@ -20,7 +20,7 @@ export default async function LeaderboardPage() {
   const supabase = await createServerSupabaseClient();
   const [entries, { data: { user } }] = await Promise.all([
     getLeaderboard(),
-    supabase.auth.getUser(),
+    supabase.auth.getUser(),  // used only for the "Improve My Design" button visibility
   ]);
 
   return (
@@ -58,7 +58,7 @@ export default async function LeaderboardPage() {
         </span>
       </div>
 
-      <LeaderboardTable entries={entries} currentUserId={user?.id} />
+      <LeaderboardTable entries={entries} />
 
       {entries.length === 0 && (
         <div className="mt-8 text-center">

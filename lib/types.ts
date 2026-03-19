@@ -13,7 +13,7 @@ export interface SimOutput {
 
 export interface LeaderboardEntry {
   rank: number;
-  userId: string;  // Supabase UUID
+  isMe: boolean;
   username: string;
   pldb: number;
   overpressure: number;

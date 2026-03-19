@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { FAKE_DOMAIN } from "@/lib/supabase";
+import { rateLimit } from "@/lib/ratelimit";
 
 export async function POST(request: NextRequest) {
+  // 5 registration attempts per minute per IP
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  if (!rateLimit(`register:${ip}`, 5, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { username, password } = await request.json();
 
   if (!username || username.length < 3 || username.length > 20) {
@@ -40,7 +47,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     const msg = error.message.includes("already been registered")
       ? "Username already taken"
-      : error.message;
+      : "Registration failed. Please try again.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 

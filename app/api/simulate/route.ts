@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { calculateSonicBoom } from "@/lib/physics";
+import { rateLimit } from "@/lib/ratelimit";
 import type { DesignParams } from "@/lib/types";
+
+function clamp(v: unknown, min: number, max: number): number {
+  const n = Number(v);
+  if (!isFinite(n)) throw new RangeError("Invalid parameter");
+  return Math.max(min, Math.min(max, n));
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
@@ -13,14 +20,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // 10 simulations per minute per user
+  if (!rateLimit(`simulate:${user.id}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const body = await request.json();
-  const params: DesignParams = {
-    noseAngle: Number(body.noseAngle),
-    fuselageRatio: Number(body.fuselageRatio),
-    wingSweep: Number(body.wingSweep),
-    tailTaper: Number(body.tailTaper),
-    volumeDistribution: Number(body.volumeDistribution),
-  };
+
+  let params: DesignParams;
+  try {
+    params = {
+      noseAngle:           clamp(body.noseAngle,          0,   1),
+      fuselageRatio:       clamp(body.fuselageRatio,      3,  12),
+      wingSweep:           clamp(body.wingSweep,          0,  75),
+      tailTaper:           clamp(body.tailTaper,          0,   1),
+      volumeDistribution:  clamp(body.volumeDistribution, -1,  1),
+    };
+  } catch {
+    return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+  }
 
   // Server-side physics (authoritative — prevents cheating)
   const result = calculateSonicBoom(params);

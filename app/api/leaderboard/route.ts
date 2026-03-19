@@ -5,11 +5,14 @@ import type { LeaderboardEntry } from "@/lib/types";
 export async function GET() {
   const supabase = await createServerSupabaseClient();
 
-  const { data, error } = await supabase
-    .from("leaderboard")
-    .select("*")
-    .order("pldb", { ascending: true })
-    .limit(50);
+  const [{ data, error }, { data: { user } }] = await Promise.all([
+    supabase
+      .from("leaderboard")
+      .select("*")
+      .order("pldb", { ascending: true })
+      .limit(50),
+    supabase.auth.getUser(),
+  ]);
 
   if (error) {
     return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 });
@@ -17,7 +20,7 @@ export async function GET() {
 
   const entries: LeaderboardEntry[] = (data ?? []).map((row, idx) => ({
     rank: idx + 1,
-    userId: row.user_id,
+    isMe: user?.id === row.user_id,
     username: row.username,
     pldb: row.pldb,
     overpressure: row.overpressure,
