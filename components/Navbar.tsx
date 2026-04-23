@@ -48,7 +48,7 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/" className="hover:text-sky-300 transition-colors">
+                <Link href="/" className="hover:text-sky-300 transition-colors cursor-pointer">
                   Log in
                 </Link>
                 <Link
