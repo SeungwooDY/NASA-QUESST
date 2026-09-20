@@ -18,6 +18,32 @@ export const metadata: Metadata = {
   description: "Design supersonic aircraft and compete for the quietest sonic boom!",
 };
 
+const JSON_LD = `{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "NASA QUESST",
+  "telephone": "1234567890",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "123 Main St",
+    "addressLocality": "Fairfax",
+    "addressRegion": "Virginia",
+    "postalCode": "22033"
+  },
+  "areaServed": [
+    "Aerodynamics"
+  ],
+  "makesOffer": [
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "Service",
+        "name": "Fun project for elementary schoolers."
+      }
+    }
+  ]
+}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,6 +54,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white min-h-screen`}
       >
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
         <Navbar />
         {children}
       </body>
